@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>QuickList Tests</title>
+    <link rel="stylesheet" href="../style.css">
+    <!-- In a real testing setup, you'd use a test runner like Jest, Mocha, QUnit, etc. -->
+    <!-- This is a very basic HTML runner for the conceptual tests. -->
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .log { margin-bottom: 5px; padding: 5px; border-left: 3px solid; }
+        .pass { border-left-color: green; background-color: #e6ffe6;}
+        .fail { border-left-color: red; background-color: #ffe6e6;}
+        .warn { border-left-color: orange; background-color: #fff0e6;}
+        .info { border-left-color: blue; background-color: #e6f2ff;}
+        #testResults { margin-top: 20px; border: 1px solid #ccc; padding: 10px;}
+    </style>
+</head>
+<body>
+    <h1>QuickList Conceptual Tests</h1>
+    <p>Open the browser console to see detailed test logs. Summary below:</p>
+
+    <!-- App structure for tests -->
+    <div class="container" style="display: none;"> <!-- Hidden, for JS to interact with -->
+        <h1>QuickList</h1>
+        <input type="text" id="itemInput" placeholder="Add an item...">
+        <button id="addItemBtn">Add</button>
+        <ul id="quickList"></ul>
+    </div>
+
+    <div id="testResults">Running tests...</div>
+
+    <script src="../script.js"></script>
+    <script>
+        // Capture console.log, .error, .warn to display on page
+        const testResultsDiv = document.getElementById('testResults');
+        let currentTestName = "";
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+
+        function formatLog(type, args) {
+            const msg = Array.from(args).join(' ');
+            const logEntry = document.createElement('div');
+            logEntry.classList.add('log', type);
+            if (msg.startsWith("Conceptual Test")) {
+                currentTestName = msg;
+                logEntry.classList.add('info');
+                logEntry.textContent = msg;
+            } else if (msg.toUpperCase().startsWith("PASS:")) {
+                logEntry.classList.add('pass');
+                logEntry.textContent = `PASS: ${currentTestName} - ${msg.substring(5)}`;
+            } else if (msg.toUpperCase().startsWith("FAIL:")) {
+                logEntry.classList.add('fail');
+                logEntry.textContent = `FAIL: ${currentTestName} - ${msg.substring(5)}`;
+            } else if (msg.toUpperCase().startsWith("SKIP:")) {
+                logEntry.classList.add('warn');
+                 logEntry.textContent = `SKIP: ${currentTestName} - ${msg.substring(5)}`;
+            }
+            else {
+                logEntry.textContent = msg;
+            }
+            testResultsDiv.appendChild(logEntry);
+        }
+
+        console.log = (...args) => {
+            originalConsoleLog.apply(console, args);
+            formatLog('info', args);
+        };
+        console.error = (...args) => {
+            originalConsoleError.apply(console, args);
+            formatLog('fail', args);
+        };
+        console.warn = (...args) => {
+            originalConsoleWarn.apply(console, args);
+            formatLog('warn', args);
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            testResultsDiv.innerHTML = ''; // Clear "Running tests..."
+            runConceptualTests();
+        });
+
+        // Simplified test runner for script.test.js
+        function runConceptualTests() {
+            console.log("Starting QuickList Conceptual Tests...");
+
+            // Mock localStorage if it's not available (e.g. file:// protocol in some browsers)
+            // or for a clean slate.
+            let LStorage;
+            try {
+                LStorage = window.localStorage;
+                LStorage.setItem('test', 'test'); // Check if writable
+                LStorage.removeItem('test');
+            } catch (e) {
+                console.warn("localStorage not available or not writable. Using mock localStorage for tests.");
+                LStorage = (function() {
+                    let store = {};
+                    return {
+                        getItem: function(key) { return store[key] || null; },
+                        setItem: function(key, value) { store[key] = value.toString(); },
+                        removeItem: function(key) { delete store[key]; },
+                        clear: function() { store = {}; }
+                    };
+                })();
+            }
+            const actualLocalStorage = window.localStorage; // keep a reference if needed
+            window.localStorage = LStorage; // Override for tests
+
+
+            const itemInput = document.getElementById('itemInput');
+            const addItemBtn = document.getElementById('addItemBtn');
+            const quickList = document.getElementById('quickList');
+
+            function resetAppForTest() {
+                quickList.innerHTML = ''; // Clear the list
+                itemInput.value = '';    // Clear input
+                localStorage.clear();    // Clear storage
+                // Re-initialize items from storage (which is now empty)
+                // This simulates a fresh load of the app's list part
+                // Note: This relies on script.js's DOMContentLoaded listener having already run
+                // and `loadItems` being callable or implicitly run.
+                // If `loadItems` is only in DOMContentLoaded, we might need to call it manually.
+                // For this test, we assume `script.js` handles list initialization correctly
+                // on its own after DOM is ready.
+                // If there was a global `loadItems` function from script.js:
+                // if (typeof loadItems === 'function') loadItems();
+            }
+
+            // --- Test Suite ---
+            currentTestName = "Test 1: Adding an item";
+            console.log(currentTestName);
+            resetAppForTest();
+            itemInput.value = "Test Item 1";
+            addItemBtn.click();
+            if (quickList.children.length === 1 && quickList.children[0].textContent.includes("Test Item 1")) {
+                console.log("PASS: Item added to UI.");
+            } else {
+                console.error("FAIL: Item not added to UI or incorrect content. List items:", quickList.innerHTML);
+            }
+            let storedAfterAdd = JSON.parse(localStorage.getItem('quickListItems'));
+            if (storedAfterAdd && storedAfterAdd.length === 1 && storedAfterAdd[0].text === "Test Item 1") {
+                console.log("PASS: Item added to localStorage.");
+            } else {
+                console.error("FAIL: Item not added to localStorage or incorrect. localStorage:", localStorage.getItem('quickListItems'));
+            }
+
+            currentTestName = "Test 2: Marking an item as complete";
+            console.log(currentTestName);
+            // Assumes item from Test 1 is still there or re-add if necessary
+            if (quickList.children.length === 0) { // Re-add if list is empty
+                itemInput.value = "Test Item For Marking";
+                addItemBtn.click();
+            }
+            const firstItem = quickList.children[0];
+            if (firstItem) {
+                firstItem.click(); // Mark as complete
+                if (firstItem.classList.contains('completed')) {
+                    console.log("PASS: Item marked as complete in UI.");
+                } else {
+                    console.error("FAIL: Item not marked as complete in UI.");
+                }
+                let storedAfterMark = JSON.parse(localStorage.getItem('quickListItems'));
+                if (storedAfterMark && storedAfterMark[0].completed === true) {
+                     console.log("PASS: Item marked as complete in localStorage.");
+                } else {
+                    console.error("FAIL: Item not marked as complete in localStorage. localStorage:", localStorage.getItem('quickListItems'));
+                }
+
+                firstItem.click(); // Unmark
+                if (!firstItem.classList.contains('completed')) {
+                    console.log("PASS: Item unmarked in UI.");
+                } else {
+                    console.error("FAIL: Item not unmarked in UI.");
+                }
+                storedAfterMark = JSON.parse(localStorage.getItem('quickListItems'));
+                 if (storedAfterMark && storedAfterMark[0].completed === false) {
+                     console.log("PASS: Item unmarked in localStorage.");
+                } else {
+                    console.error("FAIL: Item not unmarked in localStorage. localStorage:", localStorage.getItem('quickListItems'));
+                }
+            } else {
+                console.warn("SKIP: No item to mark as complete.");
+            }
+
+            currentTestName = "Test 3: Deleting an item";
+            console.log(currentTestName);
+            // Assumes item from previous test is present
+            if (quickList.children.length === 0) { // Re-add if list is empty
+                itemInput.value = "Test Item For Deletion";
+                addItemBtn.click();
+            }
+            const itemToDelete = quickList.children[0];
+            const initialStorageCount = (JSON.parse(localStorage.getItem('quickListItems')) || []).length;
+
+            if (itemToDelete) {
+                const deleteBtn = itemToDelete.querySelector('.delete-btn');
+                if (deleteBtn) {
+                    deleteBtn.click();
+                    if (quickList.children.length === (initialStorageCount > 0 ? initialStorageCount -1 : 0) ) { // Check against expected new length
+                        console.log("PASS: Item deleted from UI.");
+                    } else {
+                        console.error("FAIL: Item not deleted from UI. Expected 0 items, found:", quickList.children.length, quickList.innerHTML);
+                    }
+                     let storedAfterDelete = JSON.parse(localStorage.getItem('quickListItems'));
+                     if (storedAfterDelete && storedAfterDelete.length === (initialStorageCount > 0 ? initialStorageCount -1 : 0)) {
+                         console.log("PASS: Item deleted from localStorage.");
+                     } else {
+                        console.error("FAIL: Item not deleted from localStorage. Expected 0 items, found:", (storedAfterDelete || []).length, localStorage.getItem('quickListItems'));
+                     }
+                } else {
+                    console.warn("SKIP: Delete button not found on item.");
+                }
+            } else {
+                console.warn("SKIP: No item to delete.");
+            }
+
+            currentTestName = "Test 4: Loading items from local storage";
+            console.log(currentTestName);
+            resetAppForTest(); // Clears UI and localStorage
+            const initialItems = [{text: "Loaded Item 1", completed: false}, {text: "Loaded Item 2", completed: true}];
+            localStorage.setItem('quickListItems', JSON.stringify(initialItems));
+
+            // Manually trigger the loading logic by re-running parts of script.js or calling loadItems
+            // For this test, we'll directly call the loadItems function if it's globally available.
+            // If not, this test is more conceptual.
+            // Assuming script.js makes loadItems available or it runs on DOMContentLoaded.
+            // We need to simulate the state *after* loadItems would have run.
+            // Let's clear the list and then call the function that script.js uses to load.
+            quickList.innerHTML = ''; // Ensure list is empty before loading
+
+            // The `loadItems` function is inside a DOMContentLoaded event in script.js.
+            // To test it, we would ideally expose it or trigger that event again.
+            // For simplicity, we'll assume it has run. We need to check the quickList.
+            // The best way to test `loadItems` is to have it as an exported function.
+            // Since it's not, we'll re-trigger the DOMContentLoaded logic.
+            // This is a bit of a hack for testing.
+            document.dispatchEvent(new Event('DOMContentLoaded')); // This should make script.js run its loadItems
+
+            // Wait a brief moment for items to load if loadItems is async or has internal delays
+            setTimeout(() => {
+                if (quickList.children.length === 2) {
+                    console.log("PASS: Correct number of items loaded into UI.");
+                    let item1Correct = quickList.children[0].textContent.includes("Loaded Item 1") && !quickList.children[0].classList.contains('completed');
+                    let item2Correct = quickList.children[1].textContent.includes("Loaded Item 2") && quickList.children[1].classList.contains('completed');
+                    if (item1Correct && item2Correct) {
+                        console.log("PASS: Loaded items have correct text and completion state in UI.");
+                    } else {
+                        console.error("FAIL: Loaded items content or completion state incorrect in UI.");
+                        console.log("Item 1:", quickList.children[0].outerHTML, "Item 2:", quickList.children[1].outerHTML);
+                    }
+                } else {
+                    console.error("FAIL: Incorrect number of items loaded into UI from localStorage. Expected 2, got:", quickList.children.length);
+                    console.log("localStorage content:", localStorage.getItem('quickListItems'));
+                    console.log("quickList HTML:", quickList.innerHTML);
+                }
+                console.log("\nAll conceptual tests finished. Check results above and in browser console.");
+                 // Restore original localStorage if it was mocked
+                if (window.localStorage !== actualLocalStorage) {
+                    window.localStorage = actualLocalStorage;
+                }
+            }, 100); // Timeout to allow DOM updates
+        }
+    </script>
+</body>
+</html>
