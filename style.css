@@ -4,8 +4,9 @@ body {
     background-color: #f4f4f4;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* Align items to the top */
     min-height: 100vh;
+    padding-top: 20px; /* Add some padding at the top */
 }
 
 .container {
@@ -13,67 +14,80 @@ body {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 400px;
+    width: 450px; /* Increased width slightly */
 }
 
 h1 {
     text-align: center;
     color: #333;
+    margin-bottom: 20px; /* Add margin below heading */
 }
 
-input[type="text"] {
-    width: calc(100% - 70px); /* Adjust width to account for button */
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box; /* Include padding and border in element's total width and height */
+#moodButtons {
+    display: flex;
+    justify-content: space-around; /* Distribute buttons evenly */
+    margin-bottom: 20px;
 }
 
-button {
+#moodButtons button {
     padding: 10px 15px;
-    background-color: #5cb85c;
-    color: white;
+    font-size: 1em; /* Responsive font size */
     border: none;
-    border-radius: 4px;
+    border-radius: 20px; /* More rounded buttons */
     cursor: pointer;
-    float: right; /* Align button to the right of the input */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transitions */
 }
 
-button:hover {
-    background-color: #4cae4c;
+#moodButtons button:hover {
+    transform: translateY(-2px); /* Slight lift on hover */
 }
+
+/* Specific mood button styles */
+#happyBtn { background-color: #FFD700; color: #333; } /* Gold */
+#happyBtn:hover { background-color: #FCC200; }
+
+#sadBtn { background-color: #6495ED; color: white; } /* Cornflower Blue */
+#sadBtn:hover { background-color: #5483D7; }
+
+#angryBtn { background-color: #DC143C; color: white; } /* Crimson */
+#angryBtn:hover { background-color: #C81234; }
+
+#neutralBtn { background-color: #D3D3D3; color: #333; } /* Light Grey */
+#neutralBtn:hover { background-color: #C0C0C0; }
+
+#excitedBtn { background-color: #FF69B4; color: white; } /* Hot Pink */
+#excitedBtn:hover { background-color: #F559A4; }
+
 
 ul {
     list-style-type: none;
     padding: 0;
-    margin: 0; /* Remove default margin */
+    margin: 0;
 }
 
 li {
-    padding: 10px;
+    padding: 12px 10px; /* Slightly more padding */
     border-bottom: 1px solid #eee;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    font-size: 0.95em; /* Slightly smaller font for list items */
 }
 
 li:last-child {
     border-bottom: none;
 }
 
-li.completed {
-    text-decoration: line-through;
-    color: #aaa;
-}
+/* Removed .completed class styles as it's no longer used */
 
 .delete-btn {
     background-color: #d9534f;
     color: white;
     border: none;
-    padding: 5px 10px;
+    padding: 6px 12px; /* Adjusted padding */
     border-radius: 4px;
     cursor: pointer;
+    font-size: 0.9em; /* Smaller font for delete button */
 }
 
 .delete-btn:hover {

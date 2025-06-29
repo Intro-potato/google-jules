@@ -3,16 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuickList</title>
+    <title>Mood Journal</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>QuickList</h1>
-        <input type="text" id="itemInput" placeholder="Add an item...">
-        <button id="addItemBtn">Add</button>
+        <h1>Mood Journal</h1>
+        <div id="moodButtons">
+            <button id="happyBtn">😊 Happy</button>
+            <button id="sadBtn">😢 Sad</button>
+            <button id="angryBtn">😠 Angry</button>
+            <button id="neutralBtn">😐 Neutral</button>
+            <button id="excitedBtn">🥳 Excited</button>
+        </div>
         <ul id="quickList">
-            <!-- List items will be added here -->
+            <!-- Mood entries will be added here -->
         </ul>
     </div>
     <script src="script.js"></script>

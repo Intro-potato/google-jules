@@ -1,44 +1,40 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const itemInput = document.getElementById('itemInput');
-    const addItemBtn = document.getElementById('addItemBtn');
     const quickList = document.getElementById('quickList');
+    const moodButtons = {
+        happyBtn: '😊 Happy',
+        sadBtn: '😢 Sad',
+        angryBtn: '😠 Angry',
+        neutralBtn: '😐 Neutral',
+        excitedBtn: '🥳 Excited'
+    };
 
     // Load items from local storage
-    loadItems();
+    loadMoods();
 
-    addItemBtn.addEventListener('click', addItem);
-    itemInput.addEventListener('keypress', (event) => {
-        if (event.key === 'Enter') {
-            addItem();
+    // Add event listeners for mood buttons
+    for (const btnId in moodButtons) {
+        const btn = document.getElementById(btnId);
+        if (btn) {
+            btn.addEventListener('click', () => {
+                addMoodEntry(moodButtons[btnId]);
+            });
         }
-    });
-
-    function addItem() {
-        const itemText = itemInput.value.trim();
-        if (itemText === '') {
-            return; // Don't add empty items
-        }
-
-        const listItem = createListItem(itemText);
-        quickList.appendChild(listItem);
-
-        saveItem(itemText); // Save to local storage
-        itemInput.value = ''; // Clear input field
-        itemInput.focus();
     }
 
-    function createListItem(text, completed = false) {
+    function addMoodEntry(mood) {
+        const timestamp = new Date();
+        const formattedTimestamp = `${timestamp.getFullYear()}-${(timestamp.getMonth() + 1).toString().padStart(2, '0')}-${timestamp.getDate().toString().padStart(2, '0')} ${timestamp.getHours().toString().padStart(2, '0')}:${timestamp.getMinutes().toString().padStart(2, '0')}`;
+        const moodEntryText = `${mood} - ${formattedTimestamp}`;
+
+        const listItem = createListItem(moodEntryText);
+        quickList.appendChild(listItem);
+
+        saveMood(moodEntryText); // Save to local storage
+    }
+
+    function createListItem(text) {
         const li = document.createElement('li');
         li.textContent = text;
-        if (completed) {
-            li.classList.add('completed');
-        }
-
-        // Toggle completed state
-        li.addEventListener('click', () => {
-            li.classList.toggle('completed');
-            updateItemInStorage(text, li.classList.contains('completed'));
-        });
 
         // Delete button
         const deleteBtn = document.createElement('button');
@@ -47,44 +43,35 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteBtn.addEventListener('click', (event) => {
             event.stopPropagation(); // Prevent li click event from firing
             quickList.removeChild(li);
-            removeItemFromStorage(text);
+            removeMoodFromStorage(text);
         });
 
         li.appendChild(deleteBtn);
         return li;
     }
 
-    function saveItem(itemText, completed = false) {
-        let items = getItemsFromStorage();
-        items.push({ text: itemText, completed: completed });
-        localStorage.setItem('quickListItems', JSON.stringify(items));
+    function saveMood(moodEntryText) {
+        let moods = getMoodsFromStorage();
+        moods.push({ text: moodEntryText }); // Store as an object for consistency, though only 'text' is used for now
+        localStorage.setItem('moodJournalEntries', JSON.stringify(moods));
     }
 
-    function loadItems() {
-        let items = getItemsFromStorage();
-        items.forEach(item => {
-            const listItem = createListItem(item.text, item.completed);
+    function loadMoods() {
+        let moods = getMoodsFromStorage();
+        moods.forEach(mood => {
+            const listItem = createListItem(mood.text);
             quickList.appendChild(listItem);
         });
     }
 
-    function getItemsFromStorage() {
-        const itemsJSON = localStorage.getItem('quickListItems');
-        return itemsJSON ? JSON.parse(itemsJSON) : [];
+    function getMoodsFromStorage() {
+        const moodsJSON = localStorage.getItem('moodJournalEntries');
+        return moodsJSON ? JSON.parse(moodsJSON) : [];
     }
 
-    function removeItemFromStorage(itemText) {
-        let items = getItemsFromStorage();
-        items = items.filter(item => item.text !== itemText);
-        localStorage.setItem('quickListItems', JSON.stringify(items));
-    }
-
-    function updateItemInStorage(itemText, completed) {
-        let items = getItemsFromStorage();
-        const itemIndex = items.findIndex(item => item.text === itemText);
-        if (itemIndex > -1) {
-            items[itemIndex].completed = completed;
-            localStorage.setItem('quickListItems', JSON.stringify(items));
-        }
+    function removeMoodFromStorage(moodEntryText) {
+        let moods = getMoodsFromStorage();
+        moods = moods.filter(mood => mood.text !== moodEntryText);
+        localStorage.setItem('moodJournalEntries', JSON.stringify(moods));
     }
 });
